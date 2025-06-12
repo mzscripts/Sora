@@ -45,5 +45,5 @@ def download_images(input_file, output_folder):
 
 if __name__ == '__main__':
     input_file = 'input.txt'  # Path to your input text file
-    output_folder = 'downloaded_images7fat'  # Path to save images
+    output_folder = 'motu'  # Path to save images
     download_images(input_file, output_folder)
