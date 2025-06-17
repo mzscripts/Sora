@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-HTML_FILE = 'lex_live.html'
-OUTPUT_FOLDER = 'lexica_imagesFullSrc'
+HTML_FILE = 'lexica_scraped.html'
+OUTPUT_FOLDER = 'Danger'
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 ext_map = {
