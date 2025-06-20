@@ -5,7 +5,7 @@ async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
         page = await browser.new_page()
-        await page.goto("https://lexica.art/?q=317a5fe9-4600-4829-b67d-dba07887ba6e", wait_until="networkidle")
+        await page.goto("https://lexica.art/", wait_until="networkidle")
         await asyncio.sleep(5)
 
         seen_imgs = set()
