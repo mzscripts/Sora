@@ -1,57 +1,54 @@
+import asyncio
+import logging
+from playwright.async_api import async_playwright
 import os
-import re
-import requests
-import hashlib
 
-# Path to your input txt file
-input_file = 'input.txt'
-# Output folder to save videos
-output_folder = 'downloaded_videos'
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Create output directory if it doesn't exist
-os.makedirs(output_folder, exist_ok=True)
+async def extract_and_save_image_urls(page):
+    # Wait for the page to load
+    logger.info("Waiting for page to load")
+    await page.wait_for_load_state("load")
 
-# Regular expression to extract URLs from file
-url_pattern = re.compile(r'"url":\s*"([^"]+)"')
+    # Extract all img tags and their src attributes
+    logger.info("Extracting image URLs")
+    img_elements = await page.query_selector_all("img")
+    image_urls = []
+    for img in img_elements:
+        src = await img.get_attribute("src")
+        if src and src.startswith("http"):
+            image_urls.append(src)
+            logger.debug(f"Found image URL: {src}")
 
-# Set to store hashes of downloaded files for uniqueness
-downloaded_hashes = set()
+    # Save URLs to a file
+    if image_urls:
+        with open("image_urls.txt", "w") as f:
+            for url in image_urls:
+                f.write(url + "\n")
+        logger.info(f"Saved {len(image_urls)} image URLs to image_urls.txt")
+    else:
+        logger.warning("No image URLs found")
 
-# Function to generate hash of content for uniqueness
-def get_hash(content):
-    return hashlib.sha256(content).hexdigest()
-
-# Read and extract URLs
-with open(input_file, 'r', encoding='utf-8') as f:
-    content = f.read()
-    urls = url_pattern.findall(content)
-
-print(f"Found {len(urls)} URLs in the file.")
-
-# Start downloading
-for idx, url in enumerate(urls, 1):
+async def main():
     try:
-        print(f"Downloading ({idx}/{len(urls)}): {url}")
-        response = requests.get(url, timeout=30)
-        response.raise_for_status()
+        async with async_playwright() as p:
+            logger.info("Launching Chromium browser")
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
 
-        file_hash = get_hash(response.content)
-        if file_hash in downloaded_hashes:
-            print("Duplicate file detected, skipping...")
-            continue
-        
-        downloaded_hashes.add(file_hash)
+            # Load the local HTML file (replace 'explore.html' with your file path)
+            html_file_path = os.path.abspath("explore.html")
+            logger.info(f"Loading HTML file: {html_file_path}")
+            await page.goto(f"file://{html_file_path}")
 
-        # Generate a safe filename
-        filename = url.split("/")[-1].split("?")[0]
-        save_path = os.path.join(output_folder, filename)
+            await extract_and_save_image_urls(page)
 
-        with open(save_path, 'wb') as out_file:
-            out_file.write(response.content)
-
-        print(f"Saved: {save_path}")
-
+            logger.info("Closing browser")
+            await browser.close()
     except Exception as e:
-        print(f"Failed to download: {url}\nError: {e}")
+        logger.error(f"Main process failed: {e}")
 
-print("Download complete.")
+if __name__ == "__main__":
+    asyncio.run(main())

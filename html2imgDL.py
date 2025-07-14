@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-HTML_FILE = 'lexica_scraped.html'
+HTML_FILE = 'output\customAll.html'
 OUTPUT_FOLDER = 'Danger'
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
